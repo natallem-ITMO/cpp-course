@@ -1,3 +1,4 @@
 /.idea
 /practices/*/cmake-build-debug/
+/practices/*/cmake-build-release/
 /practices/*/.idea/

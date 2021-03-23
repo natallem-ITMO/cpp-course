@@ -103,7 +103,7 @@ namespace intrusive {
             return (current != rhs.current);
         }
 
-    public:
+    private:
         explicit list_iterator(list_element<Tag> *current) noexcept: current(current) {}
 
         base *current;
@@ -219,10 +219,11 @@ namespace intrusive {
             list_element<Tag> const &ll = *itr;
             auto &next_element = const_cast<list_element<Tag> &>(ll);
             list_element<Tag> &element = el;
-            element.prev = next_element.prev;
-            element.prev->next = next_element.prev = &element;
-            element.next = &next_element;
-            return iterator(element);
+            return insert_before(next_element, element);
+//            element.prev = next_element.prev;
+//            element.prev->next = next_element.prev = &element;
+//            element.next = &next_element;
+//            return iterator(element);
         }
 
         iterator erase(const_iterator itr) noexcept {
@@ -234,23 +235,23 @@ namespace intrusive {
         }
 
         void splice(const_iterator pos, list &other, const_iterator first, const_iterator last) noexcept {
+            while (first != last) {
+                T &cur_element = const_cast<T &>(*first);
+                first = erase(first);
+                other.insert(pos, cur_element);
+            }
+        }
 
-            if (first == last)
-                return;
+        void insert_before_element(T &element_after_inserted, T &element) {
+            list_element<Tag> &el = element_after_inserted;
+            insert_before(el, element);
+        }
 
-            auto triple_swap = [](list_element<Tag> *&a, list_element<Tag> *&b, list_element<Tag> *&c) {
-                list_element<Tag> *t = a;
-                a = b;
-                b = c;
-                c = t;
-            };
-
-            auto pos_ptr = const_cast<list_element<Tag> *>(pos.current);
-            auto first_ptr = const_cast<list_element<Tag> *>(first.current);
-            auto last_ptr = const_cast<list_element<Tag> *>(last.current);
-
-            triple_swap(pos_ptr->prev->next, first_ptr->prev->next, last_ptr->prev->next);
-            triple_swap(pos_ptr->prev, last_ptr->prev, first_ptr->prev);
+        iterator insert_before(list_element<Tag>  & next_element, list_element<Tag> & element) {
+            element.prev = next_element.prev;
+            element.prev->next = next_element.prev = &element;
+            element.next = &next_element;
+            return iterator(element);
         }
 
     private :
